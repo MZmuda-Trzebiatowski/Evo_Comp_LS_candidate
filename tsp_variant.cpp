@@ -1055,83 +1055,49 @@ vector<int> local_search_steepest_candidate(vector<int> tour, const vector<vecto
         Move best_move;
         best_move.delta = 0;
 
-        // 1. Inter-route: V-E Exchange (Candidates only)
-        // candidate edge is (v_prev, e_j)
-        for (int prev_idx = 0; prev_idx < k; ++prev_idx) 
-        {
-            int prev_v = tour[prev_idx]; // The node before the removed one
+        for(int i = 0; i < k; i++) {
+            int current_node = tour[i];
 
-            for (int e_j : candidate_list[prev_v]) 
-            {
-                if (is_selected[e_j]) continue;
+            for(int candidate: candidate_list[current_node]) {
+                if (tour[(i + 1) % k] == candidate || tour[(i + k - 1) % k] == candidate){
+                    continue;
+                } else if(is_selected[candidate]) {
+                    auto it = find(tour.begin(), tour.end(), candidate);
+                    int j = distance(tour.begin(), it);
 
-                int removed_idx = (prev_idx + 1) % k;
+                    int delta1 = delta_2opt(tour, i, j, d);
 
-                int delta = delta_V_E_exchange(tour, removed_idx, e_j, d, nodes);
+                    int i2 = (i + k - 1) % k;
+                    int j2 = (j + k - 1) % k;
+                    int delta2 = delta_2opt(tour, i2, j2, d);
 
-                if (delta < best_move.delta)
-                {
-                    best_move.delta = delta;
-                    best_move.type = 0;     // V-E
-                    best_move.i = removed_idx; // Index of node to be removed
-                    best_move.j = e_j;      // Index of node to be inserted
-                }
-            }
-        
-            // candidate edge is (e_j, v_prev).
-            for (int e_j : candidate_list[prev_v]) 
-            {
-                if (is_selected[e_j]) continue;
+                    if (delta1 < best_move.delta)
+                    {
+                        best_move.delta = delta1;
+                        best_move.type = 2; // 2-opt
+                        best_move.i = i;
+                        best_move.j = j;
+                    }
 
-                int removed_idx = (prev_idx + k - 1) % k;
-
-                int delta = delta_V_E_exchange(tour, removed_idx, e_j, d, nodes);
-
-                if (delta < best_move.delta)
-                {
-                    best_move.delta = delta;
-                    best_move.type = 0;
-                    best_move.i = removed_idx; 
-                    best_move.j = e_j;
-                }
-            }
-        }
-
-        // 2. Intra-route: 2-opt (Candidates only)
-        for (int i = 0; i < k; ++i)
-        {
-            int v_i = tour[i];
-            int i_plus_1 = (i + 1) % k;
-
-            for (int v_j : candidate_list[v_i]) 
-            {
-                if (!is_selected[v_j]) continue;
-
-                int j = -1;
-                for(int idx = 0; idx < k; ++idx) {
-                    if (tour[idx] == v_j) {
-                        j = idx;
-                        break;
+                    if (delta2 < best_move.delta)
+                    {
+                        best_move.delta = delta2;
+                        best_move.type = 2; // 2-opt
+                        best_move.i = i2;
+                        best_move.j = j2;
+                    }
+                    
+                } else if (!is_selected[candidate]) {
+                    int delta = delta_V_E_exchange(tour, i, candidate, d, nodes);
+                     if (delta < best_move.delta) {
+                        best_move.delta = delta;
+                        best_move.type = 0;     // V-E
+                        best_move.i = i; // Index of node to be removed
+                        best_move.j = candidate;      // Index of node to be inserted
                     }
                 }
-
-                int j_plus_1 = (j + 1) % k;
-
-                if (i == j || i_plus_1 == j || j_plus_1 == i) continue;
-
-                if (i > j) { 
-                    if (j == (i + k - 1) % k) continue;
-                }
-
-                int delta = delta_2opt(tour, i, j, d);
-
-                if (delta < best_move.delta)
-                {
-                    best_move.delta = delta;
-                    best_move.type = 2; // 2-opt
-                    best_move.i = i;
-                    best_move.j = j;
-                }
+                
+                
             }
         }
 
@@ -1272,7 +1238,11 @@ int main(int argc, char **argv)
 
     auto d = compute_distance_matrix(nodes);
 
-    run_local_search_experiment("LS_Steepest_2opt_candidate", true, false, true, n, k, d, nodes, true, true);
+    run_local_search_experiment("Steepest_swap_random_init", true, false, true, n, k, d, nodes, false, false);
 
-    run_local_search_experiment("LS_Steepest_2opt_candidate", true, false, true, n, k, d, nodes, true, false);
+    run_local_search_experiment("Steepest_2opt_random_init", true, true, true, n, k, d, nodes, false, false);
+
+    run_local_search_experiment("Steepest_candidate_random_init", false, false, true, n, k, d, nodes, true, true);
+
+    run_local_search_experiment("Steepest_candidate_random_init", false, false, true, n, k, d, nodes, true, false);
 }
