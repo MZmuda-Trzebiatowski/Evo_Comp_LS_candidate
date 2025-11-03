@@ -1088,12 +1088,22 @@ vector<int> local_search_steepest_candidate(vector<int> tour, const vector<vecto
                     }
                     
                 } else if (!is_selected[candidate]) {
-                    int delta = delta_V_E_exchange(tour, i, candidate, d, nodes);
-                     if (delta < best_move.delta) {
-                        best_move.delta = delta;
-                        best_move.type = 0;     // V-E
-                        best_move.i = i; // Index of node to be removed
-                        best_move.j = candidate;      // Index of node to be inserted
+                    int delta1 = delta_V_E_exchange(tour, (i + k - 1) % k, candidate, d, nodes);
+                    int delta2 = delta_V_E_exchange(tour, (i + 1) % k, candidate, d, nodes);
+                    if (delta1 < best_move.delta)
+                    {
+                        best_move.delta = delta1;
+                        best_move.type = 0; 
+                        best_move.i = (i + k - 1) % k;
+                        best_move.j = candidate;
+                    }
+
+                    if (delta2 < best_move.delta)
+                    {
+                        best_move.delta = delta2;
+                        best_move.type = 0; 
+                        best_move.i = (i + 1) % k;
+                        best_move.j = candidate;
                     }
                 }
                 
